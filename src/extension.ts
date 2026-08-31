@@ -7,7 +7,7 @@ import {
   type CompiledRule,
   type OffsetRange,
 } from './matcher';
-import { presetRules, unknownPresets } from './presets';
+import { enabledPresetIds, presetRules, unknownPresets } from './presets';
 import { isConfigDocument, hasBulkInsert } from './documents';
 import { matchesAnyGlob, ruleApplies } from './filters';
 import { normalizeRule, type BlurRule, type BlurStyle } from './rules';
@@ -126,7 +126,7 @@ class BlurController implements vscode.Disposable {
 
     const c = vscode.workspace.getConfiguration('blurText', document.uri);
     const raw = c.get<unknown[]>('rules', []);
-    const presets = c.get<string[]>('presets', []);
+    const presets = enabledPresetIds(c.get<unknown>('presets'));
 
     const rules: BlurRule[] = [
       ...presetRules(presets),

@@ -93,6 +93,23 @@ export const PRESETS: Record<string, BlurRule[]> = {
   ],
 };
 
+/**
+ * The setting is an object of booleans so the settings UI renders it as checkboxes
+ * (`{"openai-keys": true}`). An array of ids is still accepted, since that was the
+ * earlier shape and is the more natural thing to hand-write in JSON.
+ */
+export function enabledPresetIds(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((id): id is string => typeof id === 'string');
+  }
+  if (raw !== null && typeof raw === 'object') {
+    return Object.entries(raw as Record<string, unknown>)
+      .filter(([, enabled]) => enabled === true)
+      .map(([id]) => id);
+  }
+  return [];
+}
+
 export function presetRules(ids: readonly string[]): BlurRule[] {
   const out: BlurRule[] = [];
   for (const id of ids) {

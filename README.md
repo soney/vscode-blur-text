@@ -122,9 +122,21 @@ Groups that did not participate in a match are simply skipped.
 Instead of writing patterns yourself, switch on a built-in pack. Presets are **off by
 default** — nothing is hidden until you ask for it.
 
+In the Settings UI they are plain checkboxes:
+
+![The presets rendered as a checkbox list in the VS Code settings UI](images/presets.png)
+
+Or in `settings.json`:
+
 ```jsonc
-"blurText.presets": ["secret-assignments", "dotenv-values", "openai-keys"]
+"blurText.presets": {
+  "secret-assignments": true,
+  "dotenv-values": true,
+  "openai-keys": true
+}
 ```
+
+A plain array of ids — `["secret-assignments", "openai-keys"]` — is accepted too.
 
 | Preset               | Hides                                                        |
 | -------------------- | ------------------------------------------------------------ |

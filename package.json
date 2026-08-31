@@ -221,47 +221,73 @@
           }
         },
         "blurText.presets": {
-          "type": "array",
-          "default": [],
+          "type": "object",
+          "default": {},
           "scope": "resource",
-          "markdownDescription": "Built-in pattern packs to enable in addition to `#blurText.rules#`.",
-          "items": {
-            "type": "string",
-            "enum": [
-              "secret-assignments",
-              "dotenv-values",
-              "openai-keys",
-              "anthropic-keys",
-              "aws-keys",
-              "github-tokens",
-              "google-api-keys",
-              "slack-tokens",
-              "stripe-keys",
-              "bearer-tokens",
-              "jwt",
-              "private-key-blocks",
-              "emails",
-              "ip-addresses",
-              "uuids"
-            ],
-            "enumDescriptions": [
-              "Values assigned to secret-looking names (api_key, token, password, secret, ...) in any language",
-              "Every value in .env-style files",
-              "OpenAI keys (sk-..., sk-proj-...)",
-              "Anthropic keys (sk-ant-...)",
-              "AWS access key ids (AKIA..., ASIA...)",
-              "GitHub tokens (ghp_..., github_pat_...)",
-              "Google API keys (AIza...)",
-              "Slack tokens (xoxb-, xoxp-, ...)",
-              "Stripe keys (sk_live_..., pk_test_...)",
-              "Values after \"Bearer \"",
-              "JSON Web Tokens (eyJ........)",
-              "PEM private key blocks",
-              "Email addresses",
-              "IPv4 addresses",
-              "UUIDs"
-            ]
-          }
+          "additionalProperties": false,
+          "properties": {
+            "secret-assignments": {
+              "type": "boolean",
+              "description": "Values assigned to secret-looking names (api_key, token, password, secret, ...) in any language"
+            },
+            "dotenv-values": {
+              "type": "boolean",
+              "description": "Every value in .env-style files"
+            },
+            "openai-keys": {
+              "type": "boolean",
+              "description": "OpenAI keys (sk-..., sk-proj-...)"
+            },
+            "anthropic-keys": {
+              "type": "boolean",
+              "description": "Anthropic keys (sk-ant-...)"
+            },
+            "aws-keys": {
+              "type": "boolean",
+              "description": "AWS access key ids (AKIA..., ASIA...)"
+            },
+            "github-tokens": {
+              "type": "boolean",
+              "description": "GitHub tokens (ghp_..., github_pat_...)"
+            },
+            "google-api-keys": {
+              "type": "boolean",
+              "description": "Google API keys (AIza...)"
+            },
+            "slack-tokens": {
+              "type": "boolean",
+              "description": "Slack tokens (xoxb-, xoxp-, ...)"
+            },
+            "stripe-keys": {
+              "type": "boolean",
+              "description": "Stripe keys (sk_live_..., pk_test_...)"
+            },
+            "bearer-tokens": {
+              "type": "boolean",
+              "description": "Values after \"Bearer \""
+            },
+            "jwt": {
+              "type": "boolean",
+              "description": "JSON Web Tokens (eyJ........)"
+            },
+            "private-key-blocks": {
+              "type": "boolean",
+              "description": "PEM private key blocks"
+            },
+            "emails": {
+              "type": "boolean",
+              "description": "Email addresses"
+            },
+            "ip-addresses": {
+              "type": "boolean",
+              "description": "IPv4 addresses"
+            },
+            "uuids": {
+              "type": "boolean",
+              "description": "UUIDs"
+            }
+          },
+          "markdownDescription": "Built-in pattern packs to enable alongside `#blurText.rules#`. Tick a box to turn a pack on. Hover a name for what it hides; the README has the full table."
         },
         "blurText.style": {
           "type": "string",

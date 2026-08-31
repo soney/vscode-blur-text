@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 import { isConfigDocument, hasBulkInsert } from '../documents';
 import { compileRules, findRanges, mergeRanges } from '../matcher';
-import { PRESETS, presetRules } from '../presets';
+import { PRESETS, enabledPresetIds, presetRules } from '../presets';
 import { normalizeRule, type BlurRule } from '../rules';
 
 /** Run a set of raw config entries over `text` and return the hidden substrings. */
@@ -263,4 +263,24 @@ test('bulk inserts are detected so pastes can skip the debounce', () => {
   assert.equal(hasBulkInsert([{ text: 'a' }]), false, 'single keystroke');
   assert.equal(hasBulkInsert([{ text: '' }]), false, 'deletion');
   assert.equal(hasBulkInsert([]), false, 'no changes');
+});
+
+test('preset ids are read from both the checkbox object and a plain array', () => {
+  // The settings-UI shape: an object of booleans, only the ticked ones count.
+  assert.deepEqual(
+    enabledPresetIds({ 'openai-keys': true, emails: false, jwt: true }),
+    ['openai-keys', 'jwt']
+  );
+  // The earlier array shape stays supported.
+  assert.deepEqual(enabledPresetIds(['openai-keys', 'jwt']), ['openai-keys', 'jwt']);
+  // Anything else contributes nothing rather than throwing.
+  for (const junk of [undefined, null, 'openai-keys', 42, {}, []]) {
+    assert.deepEqual(enabledPresetIds(junk), [], JSON.stringify(junk ?? null));
+  }
+});
+
+test('checkbox-shaped presets resolve to real rules', () => {
+  const rules = presetRules(enabledPresetIds({ 'openai-keys': true, uuids: false }));
+  assert.equal(rules.length, 1);
+  assert.equal(rules[0].name, 'openai-keys');
 });
