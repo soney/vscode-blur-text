@@ -236,11 +236,11 @@ npm run publish    # vsce publish
 
 Before the first publish:
 
-1. Create a Marketplace publisher, and make sure `publisher` in `package.json` matches
-   its id.
-2. `npx vsce login <publisher>` with an Azure DevOps personal access token scoped to
-   **Marketplace > Manage**.
-3. **Push the repository first.** `vsce` rewrites relative image links in `README.md`
+1. `npx vsce login oney` with an Azure DevOps personal access token scoped to
+   **Marketplace > Manage**. `oney` is the Marketplace publisher id and must match
+   `publisher` in `package.json` — note it differs from the `soney` GitHub org in the
+   repository URL.
+2. **Push the repository first.** `vsce` rewrites relative image links in `README.md`
    to `https://github.com/soney/vscode-blur-text/raw/HEAD/images/…`, so the screenshots
    only load in the extension details panel once those files exist on the default
    branch. This is also why images look broken if you install the `.vsix` locally
