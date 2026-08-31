@@ -234,24 +234,24 @@ npm run package    # -> blur-text-<version>.vsix
 npm run publish    # vsce publish
 ```
 
-Three identities are involved here and they are deliberately different:
-
-| Identity                    | Value                              |
-| --------------------------- | ---------------------------------- |
-| Marketplace publisher       | `umspot` (the `publisher` field)    |
-| Azure DevOps org holding the PAT | `umspot`                      |
-| GitHub org hosting the code | `soney` (the `repository` field)    |
+The Marketplace publisher is `oney` (the `publisher` field); the code is hosted under
+the `soney` GitHub org (the `repository` field). They are different on purpose — the
+publisher id matches the existing `oney.*` extensions.
 
 Before the first publish:
 
-1. Register the `umspot` publisher at <https://marketplace.visualstudio.com/manage>.
-   Its id must match `publisher` in `package.json` exactly.
-2. Create a personal access token in the `umspot` Azure DevOps organization
-   (<https://dev.azure.com/umspot>) with scope **Marketplace > Manage** and
-   **Organization: All accessible organizations**. That last setting matters — a PAT
-   scoped to a single organization is the usual reason `vsce publish` returns 401 even
-   though the token is valid.
-3. `npx vsce login umspot`
+1. Create a personal access token at <https://dev.azure.com> with scope
+   **Marketplace > Manage** and **Organization: All accessible organizations**. That
+   last setting matters — a PAT restricted to a single organization is the usual reason
+   `vsce publish` returns 401 even though the token is valid.
+2. Mint that token while signed in as the Microsoft account that owns the `oney`
+   publisher. A PAT from any other account fails with
+   `Access Denied: <guid> ... on the resource /oney`, which is an authorization error,
+   not a scope problem — the token authenticated fine, the identity just has no rights
+   on that publisher. `npx vsce verify-pat oney` checks this in isolation, and
+   `https://app.vssps.visualstudio.com/_apis/profile/profiles/me` (basic auth, empty
+   user, PAT as password) reports which account a token belongs to.
+3. `npx vsce login oney`
 4. **Push the repository first.** `vsce` rewrites relative image links in `README.md`
    to `https://github.com/soney/vscode-blur-text/raw/HEAD/images/…`, so the screenshots
    only load in the extension details panel once those files exist on the default
