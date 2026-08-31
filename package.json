@@ -303,6 +303,21 @@
           "description": "Language ids that are never blurred.",
           "scope": "window"
         },
+        "blurText.excludeConfigFiles": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Never blur inside VS Code's own settings files (user `settings.json`, `.vscode/settings.json`, `*.code-workspace`). Those are where `#blurText.rules#` lives, so blurring them hides the patterns you are trying to edit.",
+          "scope": "window"
+        },
+        "blurText.excludeFiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Globs that are never blurred, e.g. `[\"**/fixtures/**\"]`.",
+          "scope": "resource"
+        },
         "blurText.maxFileSize": {
           "type": "number",
           "default": 2000000,

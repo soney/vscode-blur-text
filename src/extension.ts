@@ -8,7 +8,8 @@ import {
   type OffsetRange,
 } from './matcher';
 import { presetRules, unknownPresets } from './presets';
-import { ruleApplies } from './filters';
+import { isConfigDocument, hasBulkInsert } from './documents';
+import { matchesAnyGlob, ruleApplies } from './filters';
 import { normalizeRule, type BlurRule, type BlurStyle } from './rules';
 
 interface Settings {
@@ -17,6 +18,8 @@ interface Settings {
   blurRadius: number;
   revealAtCursor: boolean;
   excludeLanguages: string[];
+  excludeFiles: string[];
+  excludeConfigFiles: boolean;
   maxFileSize: number;
   maxMatchesPerRule: number;
   debounceMs: number;
@@ -32,6 +35,8 @@ function readSettings(): Settings {
     blurRadius: c.get<number>('blurRadius', 5),
     revealAtCursor: c.get<boolean>('revealAtCursor', false),
     excludeLanguages: c.get<string[]>('excludeLanguages', []),
+    excludeFiles: c.get<string[]>('excludeFiles', []),
+    excludeConfigFiles: c.get<boolean>('excludeConfigFiles', true),
     maxFileSize: c.get<number>('maxFileSize', 2_000_000),
     maxMatchesPerRule: c.get<number>('maxMatchesPerRule', 5000),
     debounceMs: c.get<number>('debounceMs', 120),
@@ -67,7 +72,9 @@ class BlurController implements vscode.Disposable {
         this.compiled.clear();
         this.refreshAll();
       }),
-      vscode.workspace.onDidChangeTextDocument((e) => this.scheduleFor(e.document)),
+      vscode.workspace.onDidChangeTextDocument((e) =>
+        this.scheduleFor(e.document, hasBulkInsert(e.contentChanges))
+      ),
       vscode.workspace.onDidCloseTextDocument((document) => this.forget(document)),
       // Changing a file's language mode closes and reopens its document; re-scan so
       // language-scoped rules take effect immediately.
@@ -149,23 +156,37 @@ class BlurController implements vscode.Disposable {
 
   // --- decorating ----------------------------------------------------------
 
-  private scheduleFor(document: vscode.TextDocument): void {
+  private scheduleFor(document: vscode.TextDocument, immediate = false): void {
     const key = document.uri.toString();
     const existing = this.timers.get(key);
     if (existing) {
       clearTimeout(existing);
+      this.timers.delete(key);
     }
+
+    // A paste can put an entire secret on screen at once. Waiting out the debounce
+    // there would leave it plainly readable for that whole window, so bulk inserts
+    // redecorate on the spot and only per-keystroke typing is debounced.
+    if (immediate) {
+      this.decorateDocument(key);
+      return;
+    }
+
     this.timers.set(
       key,
       setTimeout(() => {
         this.timers.delete(key);
-        for (const editor of vscode.window.visibleTextEditors) {
-          if (editor.document.uri.toString() === key) {
-            this.decorate(editor);
-          }
-        }
+        this.decorateDocument(key);
       }, Math.max(0, this.settings.debounceMs))
     );
+  }
+
+  private decorateDocument(uri: string): void {
+    for (const editor of vscode.window.visibleTextEditors) {
+      if (editor.document.uri.toString() === uri) {
+        this.decorate(editor);
+      }
+    }
   }
 
   /** Drop everything remembered about a document that is no longer open. */
@@ -198,7 +219,7 @@ class BlurController implements vscode.Disposable {
   private applyDecorations(editor: vscode.TextEditor): void {
     const document = editor.document;
 
-    if (!this.active || this.settings.excludeLanguages.includes(document.languageId)) {
+    if (!this.active || this.isExcluded(document)) {
       this.registry.clearEditor(editor);
       return;
     }
@@ -265,6 +286,19 @@ class BlurController implements vscode.Disposable {
     for (const [key, type] of this.registry.entries()) {
       editor.setDecorations(type, byStyle.get(key) ?? []);
     }
+  }
+
+  private isExcluded(document: vscode.TextDocument): boolean {
+    if (this.settings.excludeLanguages.includes(document.languageId)) {
+      return true;
+    }
+    if (
+      this.settings.excludeConfigFiles &&
+      isConfigDocument(document.uri.scheme, document.uri.path)
+    ) {
+      return true;
+    }
+    return matchesAnyGlob(this.settings.excludeFiles, document);
   }
 
   private intersectsSelection(editor: vscode.TextEditor, range: vscode.Range): boolean {

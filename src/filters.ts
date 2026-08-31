@@ -17,3 +17,8 @@ export function ruleApplies(rule: BlurRule, document: vscode.TextDocument): bool
   }
   return true;
 }
+
+/** True when the document matches any of the given globs. */
+export function matchesAnyGlob(globs: readonly string[], document: vscode.TextDocument): boolean {
+  return globs.some((pattern) => vscode.languages.match({ pattern }, document) > 0);
+}

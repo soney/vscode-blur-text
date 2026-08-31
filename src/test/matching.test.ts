@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { isConfigDocument, hasBulkInsert } from '../documents';
 import { compileRules, findRanges, mergeRanges } from '../matcher';
 import { PRESETS, presetRules } from '../presets';
 import { normalizeRule, type BlurRule } from '../rules';
@@ -234,4 +235,32 @@ test('normalizeRule defaults match the documented settings defaults', () => {
 
 test('disabled rules are skipped at compile time', () => {
   assert.deepEqual(hidden([{ pattern: 'abc', enabled: false }], 'abc'), []);
+});
+
+// --- document predicates ---------------------------------------------------
+
+test('VS Code settings files are recognized as config documents', () => {
+  const cases: Array<[string, string, boolean]> = [
+    // User settings.json and friends live under this scheme.
+    ['vscode-userdata', '/User/settings.json', true],
+    ['vscode-userdata', '/User/keybindings.json', true],
+    ['file', '/home/me/project/.vscode/settings.json', true],
+    ['file', '/home/me/project/my.code-workspace', true],
+    // Everything else must still be blurred.
+    ['file', '/home/me/project/src/settings.json', false],
+    ['file', '/home/me/project/.vscode/launch.json', false],
+    ['file', '/home/me/project/app.py', false],
+    ['file', '/home/me/.env', false],
+  ];
+  for (const [scheme, path, expected] of cases) {
+    assert.equal(isConfigDocument(scheme, path), expected, `${scheme}:${path}`);
+  }
+});
+
+test('bulk inserts are detected so pastes can skip the debounce', () => {
+  assert.equal(hasBulkInsert([{ text: 'sk-live-abcdef' }]), true, 'paste');
+  assert.equal(hasBulkInsert([{ text: 'a' }, { text: 'multi cursor paste' }]), true);
+  assert.equal(hasBulkInsert([{ text: 'a' }]), false, 'single keystroke');
+  assert.equal(hasBulkInsert([{ text: '' }]), false, 'deletion');
+  assert.equal(hasBulkInsert([]), false, 'no changes');
 });

@@ -158,9 +158,11 @@ default** — nothing is hidden until you ask for it.
 | `blurText.blurRadius`        | `5`                  | Blur strength in pixels.                              |
 | `blurText.revealAtCursor`    | `false`              | Un-blur a match while your cursor is inside it, so you can still edit it. Only applies to the focused editor. |
 | `blurText.excludeLanguages`  | `["log", "search-result"]` | Languages never blurred.                        |
+| `blurText.excludeConfigFiles`| `true`               | Never blur inside VS Code's own settings files.       |
+| `blurText.excludeFiles`      | `[]`                 | Globs never blurred, e.g. `["**/fixtures/**"]`.       |
 | `blurText.maxFileSize`       | `2000000`            | Skip documents larger than this many characters.      |
 | `blurText.maxMatchesPerRule` | `5000`               | Stop after this many matches per rule per document.   |
-| `blurText.debounceMs`        | `120`                | Delay after a keystroke before re-scanning.           |
+| `blurText.debounceMs`        | `120`                | Delay after a keystroke before re-scanning. Pastes ignore this — see below. |
 | `blurText.showStatusBarItem` | `true`               | Show the status bar indicator.                        |
 
 `blurText.rules` and `blurText.presets` are resource-scoped, so a project can add its
@@ -177,6 +179,27 @@ principle be reversed from a screenshot; a block cannot.
 
 Styles mix — the screenshot above uses `redact` globally with one rule overridden to
 `{ "style": "blur", "blurRadius": 4 }`.
+
+### Pasting, and editing your own config
+
+Two behaviours worth knowing about:
+
+**Pastes are not debounced.** `blurText.debounceMs` keeps ordinary typing from
+re-scanning the document on every keystroke, but a paste can put a whole secret on
+screen in one go. Any edit that inserts more than one character — a paste, a
+multi-cursor insert, an undo, a snippet — redecorates immediately instead of waiting
+out the debounce, so raising `debounceMs` for performance never widens the window in
+which a pasted secret is readable.
+
+It still is not instant: decorations are applied after VS Code renders the edit, so
+there is a one-frame flash that no extension can avoid. If you are pasting a live
+secret in front of an audience, toggle blurring off, paste, and toggle back on.
+
+**Your settings files are never blurred.** `blurText.rules` contains the very strings
+being hidden, so blurring inside `settings.json` would smudge the patterns you are
+trying to edit. User settings, `.vscode/settings.json` and `*.code-workspace` files are
+skipped by default; set `blurText.excludeConfigFiles` to `false` if you want them
+treated like any other file.
 
 ## Commands
 
