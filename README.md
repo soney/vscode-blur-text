@@ -251,12 +251,34 @@ Before the first publish:
    on that publisher. `npx vsce verify-pat oney` checks this in isolation, and
    `https://app.vssps.visualstudio.com/_apis/profile/profiles/me` (basic auth, empty
    user, PAT as password) reports which account a token belongs to.
-3. `npx vsce login oney`
+3. `npx vsce login oney`, or skip it — see the note below.
 4. **Push the repository first.** `vsce` rewrites relative image links in `README.md`
    to `https://github.com/soney/vscode-blur-text/raw/HEAD/images/…`, so the screenshots
    only load in the extension details panel once those files exist on the default
    branch. This is also why images look broken if you install the `.vsix` locally
    before pushing.
+
+### Publishing from a headless or remote host
+
+`vsce login` stores the token in the OS keyring. On a machine with no desktop session
+— an SSH or VS Code Remote host, a container, CI — `gnome-keyring-daemon` is usually
+not running and the keyring is locked, so the login fails at the very last step:
+
+```
+The Personal Access Token verification succeeded for the publisher 'oney'.
+ERROR  Cannot create an item in a locked collection
+```
+
+That message means the token was accepted and only the *storage* failed. Skip the
+keyring by passing the token through the environment instead:
+
+```bash
+read -rsp "PAT: " VSCE_PAT; export VSCE_PAT; echo
+npm run publish
+```
+
+`vsce publish` reads `VSCE_PAT` (or takes `--pat <token>`), so no login is needed.
+Using `read` rather than `export VSCE_PAT=…` keeps the token out of your shell history.
 
 `vsce` refuses to publish extensions containing user-provided SVGs. This extension
 satisfies every one of those checks:
