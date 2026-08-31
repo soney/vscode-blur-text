@@ -1,0 +1,351 @@
+{
+  "name": "blur-text",
+  "displayName": "Blur Text",
+  "description": "Blur or redact secrets, API keys, and any text matching your patterns \u2014 for screen sharing, teaching, and demos.",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#2A2154",
+    "theme": "dark"
+  },
+  "version": "0.1.0",
+  "publisher": "soney",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soney/vscode-blur-text.git"
+  },
+  "bugs": {
+    "url": "https://github.com/soney/vscode-blur-text/issues"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "blur",
+    "redact",
+    "secrets",
+    "api key",
+    "screen sharing",
+    "presentation",
+    "teaching",
+    "privacy"
+  ],
+  "main": "./dist/extension.js",
+  "browser": "./dist/web/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "blurText.toggle",
+        "title": "Toggle Blurring",
+        "category": "Blur Text"
+      },
+      {
+        "command": "blurText.enable",
+        "title": "Enable Blurring",
+        "category": "Blur Text"
+      },
+      {
+        "command": "blurText.disable",
+        "title": "Disable Blurring",
+        "category": "Blur Text"
+      },
+      {
+        "command": "blurText.peek",
+        "title": "Peek (Reveal Everything Until Toggled Back)",
+        "category": "Blur Text"
+      },
+      {
+        "command": "blurText.blurSelection",
+        "title": "Blur Selected Text",
+        "category": "Blur Text"
+      },
+      {
+        "command": "blurText.editPatterns",
+        "title": "Edit Patterns (settings.json)",
+        "category": "Blur Text"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "blurText.toggle",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b"
+      },
+      {
+        "command": "blurText.peek",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "blurText.blurSelection",
+          "when": "editorHasSelection",
+          "group": "9_cutcopypaste@100"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "id": "blurText.redactBackground",
+        "description": "Block color used by the \"redact\" style.",
+        "defaults": {
+          "dark": "editor.foreground",
+          "light": "editor.foreground",
+          "highContrast": "editor.foreground",
+          "highContrastLight": "editor.foreground"
+        }
+      }
+    ],
+    "configuration": {
+      "title": "Blur Text",
+      "properties": {
+        "blurText.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Master switch. When off, nothing is blurred.",
+          "scope": "window"
+        },
+        "blurText.rules": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "markdownDescription": "Text to blur. Each entry is either a plain string (matched literally) or an object with more options. Example:\n\n```json\n[\n  \"sk-my-actual-key-value\",\n  { \"pattern\": \"API_KEY\\\\s*=\\\\s*(\\\\S+)\", \"regex\": true, \"group\": 1 }\n]\n```",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Literal text to blur."
+              },
+              {
+                "type": "object",
+                "required": [
+                  "pattern"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Optional label, shown in error messages only."
+                  },
+                  "pattern": {
+                    "type": "string",
+                    "description": "The literal text, or a JavaScript regular expression when \"regex\" is true."
+                  },
+                  "regex": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Treat \"pattern\" as a JavaScript regular expression."
+                  },
+                  "flags": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Extra regex flags, e.g. \"m\" for multiline or \"s\" for dotAll. The \"g\" and \"d\" flags are always added.",
+                    "pattern": "^[dgimsuvy]*$"
+                  },
+                  "group": {
+                    "description": "Which part of the match to blur: 0 (the whole match, default), a capture group number, a named group, or an array of those.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "number",
+                            "string"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "caseSensitive": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Match case exactly. Set to false to ignore case."
+                  },
+                  "wholeWord": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Only match on word boundaries (literal patterns only)."
+                  },
+                  "languages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Only apply to these language ids, e.g. [\"python\", \"javascript\"]. Omit for all languages."
+                  },
+                  "files": {
+                    "type": "string",
+                    "description": "Only apply to files matching this glob, e.g. \"**/.env*\"."
+                  },
+                  "enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Set to false to keep the rule but turn it off."
+                  },
+                  "style": {
+                    "type": "string",
+                    "enum": [
+                      "blur",
+                      "redact"
+                    ],
+                    "description": "Override the global style for this rule."
+                  },
+                  "blurRadius": {
+                    "type": "number",
+                    "description": "Override the global blur radius for this rule."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "blurText.presets": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "markdownDescription": "Built-in pattern packs to enable in addition to `#blurText.rules#`.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "secret-assignments",
+              "dotenv-values",
+              "openai-keys",
+              "anthropic-keys",
+              "aws-keys",
+              "github-tokens",
+              "google-api-keys",
+              "slack-tokens",
+              "stripe-keys",
+              "bearer-tokens",
+              "jwt",
+              "private-key-blocks",
+              "emails",
+              "ip-addresses",
+              "uuids"
+            ],
+            "enumDescriptions": [
+              "Values assigned to secret-looking names (api_key, token, password, secret, ...) in any language",
+              "Every value in .env-style files",
+              "OpenAI keys (sk-..., sk-proj-...)",
+              "Anthropic keys (sk-ant-...)",
+              "AWS access key ids (AKIA..., ASIA...)",
+              "GitHub tokens (ghp_..., github_pat_...)",
+              "Google API keys (AIza...)",
+              "Slack tokens (xoxb-, xoxp-, ...)",
+              "Stripe keys (sk_live_..., pk_test_...)",
+              "Values after \"Bearer \"",
+              "JSON Web Tokens (eyJ........)",
+              "PEM private key blocks",
+              "Email addresses",
+              "IPv4 addresses",
+              "UUIDs"
+            ]
+          }
+        },
+        "blurText.style": {
+          "type": "string",
+          "default": "blur",
+          "enum": [
+            "blur",
+            "redact"
+          ],
+          "enumDescriptions": [
+            "Smudge the text with a CSS blur filter",
+            "Cover the text with a solid block"
+          ],
+          "description": "How matched text is hidden.",
+          "scope": "window"
+        },
+        "blurText.blurRadius": {
+          "type": "number",
+          "default": 5,
+          "minimum": 0.5,
+          "maximum": 30,
+          "description": "Blur strength in pixels. Higher is harder to read.",
+          "scope": "window"
+        },
+        "blurText.revealAtCursor": {
+          "type": "boolean",
+          "default": false,
+          "description": "Un-blur a match while the cursor or selection is inside it, so you can still edit it.",
+          "scope": "window"
+        },
+        "blurText.excludeLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "log",
+            "search-result"
+          ],
+          "description": "Language ids that are never blurred.",
+          "scope": "window"
+        },
+        "blurText.maxFileSize": {
+          "type": "number",
+          "default": 2000000,
+          "description": "Skip documents larger than this many characters, to keep scanning fast.",
+          "scope": "window"
+        },
+        "blurText.maxMatchesPerRule": {
+          "type": "number",
+          "default": 5000,
+          "description": "Stop after this many matches per rule per document.",
+          "scope": "window"
+        },
+        "blurText.debounceMs": {
+          "type": "number",
+          "default": 120,
+          "description": "How long to wait after a keystroke before re-scanning the document.",
+          "scope": "window"
+        },
+        "blurText.showStatusBarItem": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a status bar indicator for the current blur state.",
+          "scope": "window"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run check-types && node esbuild.js --production",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "node esbuild.js --tests && node --test out/test/matching.test.js",
+    "package": "vsce package",
+    "open-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/vscode": "^1.75.0",
+    "@vscode/test-web": "^0.0.81",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.3"
+  }
+}
