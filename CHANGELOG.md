@@ -6,7 +6,8 @@ Initial release.
 
 - Blur or redact text matching literal strings or regular expressions.
 - Blur only part of a regex match via numbered, named, or multiple capture groups.
-- Built-in pattern presets for common secrets, plus `.env` values and secret-looking assignments.
+- Built-in pattern presets for common secrets, plus `.env` values and secret-looking
+  assignments, toggled as checkboxes in the settings UI.
 - Per-rule `languages` and `files` scoping, and per-rule style overrides.
 - Toggle, peek, and "blur selection" commands, with a status bar indicator.
 - Optional reveal-at-cursor so blurred text stays editable.
