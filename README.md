@@ -234,13 +234,25 @@ npm run package    # -> blur-text-<version>.vsix
 npm run publish    # vsce publish
 ```
 
+Three identities are involved here and they are deliberately different:
+
+| Identity                    | Value                              |
+| --------------------------- | ---------------------------------- |
+| Marketplace publisher       | `umspot` (the `publisher` field)    |
+| Azure DevOps org holding the PAT | `umspot`                      |
+| GitHub org hosting the code | `soney` (the `repository` field)    |
+
 Before the first publish:
 
-1. `npx vsce login oney` with an Azure DevOps personal access token scoped to
-   **Marketplace > Manage**. `oney` is the Marketplace publisher id and must match
-   `publisher` in `package.json` — note it differs from the `soney` GitHub org in the
-   repository URL.
-2. **Push the repository first.** `vsce` rewrites relative image links in `README.md`
+1. Register the `umspot` publisher at <https://marketplace.visualstudio.com/manage>.
+   Its id must match `publisher` in `package.json` exactly.
+2. Create a personal access token in the `umspot` Azure DevOps organization
+   (<https://dev.azure.com/umspot>) with scope **Marketplace > Manage** and
+   **Organization: All accessible organizations**. That last setting matters — a PAT
+   scoped to a single organization is the usual reason `vsce publish` returns 401 even
+   though the token is valid.
+3. `npx vsce login umspot`
+4. **Push the repository first.** `vsce` rewrites relative image links in `README.md`
    to `https://github.com/soney/vscode-blur-text/raw/HEAD/images/…`, so the screenshots
    only load in the extension details panel once those files exist on the default
    branch. This is also why images look broken if you install the `.vsix` locally
